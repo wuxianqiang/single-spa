@@ -1,6 +1,6 @@
 <template>
   <div class="home">
-    这是主项目<button @click="handleClick">click</button>
+    这是基座工程<button @click="handleClick">click</button>
     <router-view></router-view>
   </div>
 </template>

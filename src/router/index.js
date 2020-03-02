@@ -2,8 +2,10 @@ import Vue from 'vue'
 import VueRouter from 'vue-router'
 import Home from '../views/Home.vue'
 import { handleRouter } from './generator'
-import subAppMapInfo from 'dir/config'
 import Store from '../store'
+import jsonp from 'jsonp'
+const subAppMapInfo = require('../../app.json')
+
 Vue.use(VueRouter)
 
 const routes = [
@@ -28,30 +30,41 @@ const subAppRoutes = {}
 
 router.beforeEach(function (to, from, next) {
   const { path } = to;
-  // 取路径中标识子工程前缀的部分, 例如 '/subapp/xxx/index' 其中xxx即路由唯一前缀
   const id = path.split('/')[2];
   const subAppModule = subAppMapInfo[id];
   if (subAppModule) {
     if (subAppRoutes[id]) {
-      console.log('这个路径加载过')
-      next()
+      if (subAppRoutes[id].beforeEach) {
+        let Route = router
+        Route.handleRouter = handleRouter
+        Route.cacheRouter = routes
+        subAppRoutes[id].beforeEach(to, from, next, Store, Route)
+      } else {
+        next()
+      }
     } else {
-      subAppModule.js().then((registerApp) => {
-        console.log(registerApp)
-        let result = registerApp.default()
-        // 加载路由
-        subAppRoutes[id] = result.router
-        routes[0].children = handleRouter(result)
-        console.log(routes)
-        router.addRoutes(routes)
-        // 加载状态
-        Store.registerModule(id, result.store)
-        next({...to, replace:true})
-        console.log('ok', '加载子项目成功')
-      }, (err) => {
-        console.log(err, '加载子项目失败')
-        next('/subapp')
+      jsonp(subAppMapInfo[id].js, { timeout: 500 }, function (err, date) {
+        if (err) {
+          console.log(`${id}项目加载失败：`, err)
+          next('/subapp')
+        } else {
+          let result = date()
+          console.log(`${id}项目加载成功：`, result)
+          // 加载路由
+          subAppRoutes[id] = result
+          let children = routes[0].children
+          if (children) {
+            routes[0].children = children.concat(handleRouter({name: id, router: result.router}))
+          } else {
+            routes[0].children = handleRouter({name: id, router: result.router})
+          }
+          router.addRoutes(routes)
+          // 加载状态
+          Store.registerModule(id, result.store)
+          next({...to, replace:true})
+        }
       })
+      next()
     }
   } else {
     next()

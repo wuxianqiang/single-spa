@@ -75,7 +75,7 @@ module.exports = Merge(baseConfig, {
     ]
   },
   devServer: {
-    host: '0.0.0.0',
+    host: 'localhost',
     port: 8000,
     hot: true,
     open: true,
@@ -83,7 +83,10 @@ module.exports = Merge(baseConfig, {
       errors: true,
       warnings: true
     },
-    contentBase: [path.resolve(dir, 'dist'), path.resolve(dir, 'project1')]
+    contentBase: [path.resolve(dir, 'dist')],
+    headers: {
+      'Access-Control-Allow-Origin': '*',
+    }
   },
   cache: true
 })

@@ -2,6 +2,7 @@ import Vue from 'vue'
 import App from './App.vue'
 import router from './router'
 import store from './store'
+import HelloWorld from 'src/components/HelloWorld'
 
 Vue.config.productionTip = false
 
@@ -19,6 +20,7 @@ function registerGlobal (root, deps) {
 
 registerGlobal(window, {
   vue: Vue,
+  HelloWorld: HelloWorld
 })
 
 export default registerGlobal
